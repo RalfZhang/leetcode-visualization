@@ -16,11 +16,15 @@
   <!-- Don't use this in production: -->
   <script src="./lib/babel.min.js"></script>
   <style>
+    .content {
+      display: flex;
+    }
     .table {
       text-align: center;
       border: 1px solid #999;
       display: flex;
       flex-direction: column;
+      margin: 10px;
     }
     .row {
       display: flex;
@@ -145,6 +149,16 @@
           const r = new Array(m).fill(0).map(() => new Array(n).fill(1));
           r[Math.floor(m/2)][Math.floor(n/2)] = 0;
           return r;
+        case 'e1':
+          const r2 = new Array(m).fill(0).map(() => new Array(n).fill(1));
+          r2[0][0] = 0;
+          r2[0][n -1] = 0;
+          r2[m - 1][0] = 0;
+          r2[m - 1][n - 1] = 0;
+          return r2;
+        case 'random':
+          const r3 = new Array(m).fill(0).map(() => new Array(n).fill(0).map(e => Math.round(Math.random() * 0.55 + 0.45)));
+          return r3;
         default:
           break;
       }
@@ -158,7 +172,10 @@
       const [data2, setData2] = React.useState(getCopyData(getData(v)));
 
       const onChange = (e) => {
-        console.log('eeee', e.target.value)
+        const d = getData(e.target.value);
+        console.log('dd', d, e.target.value)
+        setData1(d);
+        setData2(d);
       }
 
 
@@ -181,11 +198,11 @@
             <label htmlFor="e0">Example 1</label>
             <input type="radio" id="e1" name="drone" value="e1" />
             <label htmlFor="e1">Example 2</label>
-            <input type="radio" id="e1" name="drone" value="random" />
+            <input type="radio" id="e2" name="drone" value="random" />
             <label htmlFor="e2">Random</label>
           </fieldset>
           <button onClick={start}>Start</button>
-          <div>
+          <div className="content">
             {
               [data1, data2].map((data, i) => (
                 <div className="table" key={i}>
