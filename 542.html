@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>542</title>
+  <meta name='viewport' content='width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1' />
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <link href="" rel="stylesheet">
+
+  <script src="./lib/react.development.js"></script>
+  <script src="./lib/react-dom.development.js"></script>
+
+  <!-- Don't use this in production: -->
+  <script src="./lib/babel.min.js"></script>
+  <style>
+    .table {
+      text-align: center;
+      border: 1px solid #999;
+      display: flex;
+      flex-direction: column;
+    }
+    .row {
+      display: flex;
+    }
+    .cell {
+      height: 20px;
+      width: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #999;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const logTable = (m) => {
+      console.log(m.map(e => e.join(',')).join('\n'));
+    }
+    const sleep = async (t) => {
+      return new Promise((res, rej) => {
+        setTimeout(() => {
+          res();
+        }, t || 20);
+      })
+    }
+    const m = 10;
+    const n = 15;
+    const getColor = (level) => {
+      const step = Math.floor(256 / (m + n));
+      const c = (255 - level * step).toString(16).padStart('0');
+      return `${c}${c}${c}`
+    }
+
+    // BFS
+    const updateMatrix1 = async function(mat, setData) {
+        const list = [];
+        for(let i = 0; i < mat.length; i++) {
+            for (let j = 0; j < mat[i].length; j++) {
+                if (mat[i][j] === 0) {
+                    list.push([i, j]);
+                } else {
+                    mat[i][j] = -1;
+                }
+            }
+        }
+        const co = [0, -1, 0, 1, 0];
+        while(list.length) {
+            const curr = list.shift();
+            const [x, y] = curr;
+            for (let i = 0; i < 4; i++) {
+                const x1 = x + co[i];
+                const y1 = y + co[i + 1];
+                if (x1 >= 0 && x1 < mat.length && y1 >= 0 && y1 < mat[0].length && mat[x1][y1] === -1) {
+                    mat[x1][y1] = mat[x][y] + 1;
+
+                    setData((p) => {
+                      const newD1 = getCopyData(p);
+                      newD1[x1][y1] = mat[x1][y1];
+                      return newD1;
+                    });
+                    await sleep();
+
+                    list.push([x1, y1]);
+                }
+            }
+        }
+
+        return mat;
+    };
+
+    // DP
+    const updateMatrix2 = async function(mat, setData) {
+        const m = mat.length;
+        const n = mat[0].length;
+        const max = m + n;
+        for (let i = 0; i < m; i++) {
+            for (let j = 0; j < n; j++) {
+                if (mat[i][j] === 0) continue;
+                let top = max;
+                let left = max;
+                if (i - 1 >= 0) top = mat[i - 1][j];
+                if (j - 1 >= 0) left = mat[i][j - 1];
+                mat[i][j] = Math.min(left, top) + 1;
+
+
+                setData((p) => {
+                  const newD1 = getCopyData(p);
+                  newD1[i][j] = mat[i][j];
+                  return newD1;
+                });
+                await sleep();
+            }
+        }
+
+        for (let i = m -1; i >= 0; i--) {
+            for (let j = n - 1; j >= 0; j--) {
+                if (mat[i][j] === 0) continue;
+                let bottom = max;
+                let right = max;
+                if (i + 1 < m) bottom = mat[i + 1][j];
+                if (j + 1 < n) right = mat[i][j + 1];
+                mat[i][j] = Math.min(mat[i][j], bottom + 1, right + 1);
+
+                setData((p) => {
+                  const newD1 = getCopyData(p);
+                  newD1[i][j] = mat[i][j];
+                  return newD1;
+                });
+                await sleep();
+            }
+        }
+        return mat;
+    }
+
+
+    const getData = (type) => {
+      switch (type) {
+        case 'e0':
+          const r = new Array(m).fill(0).map(() => new Array(n).fill(1));
+          r[Math.floor(m/2)][Math.floor(n/2)] = 0;
+          return r;
+        default:
+          break;
+      }
+    }
+    const getCopyData = (d) => {
+      return d.map(e => e.map(el => el))
+    }
+    const App = () => {
+      const [v, setV] = React.useState('e0');
+      const [data1, setData1] = React.useState(getCopyData(getData(v)));
+      const [data2, setData2] = React.useState(getCopyData(getData(v)));
+
+      const onChange = (e) => {
+        console.log('eeee', e.target.value)
+      }
+
+
+      const start = () => {
+        updateMatrix1(getCopyData(data1), setData1).then(r => logTable(r));
+        updateMatrix2(getCopyData(data2), setData2).then(r => logTable(r));
+      }
+
+      React.useEffect(()=> {
+
+      }, [])
+      return (
+        <div
+          // style="background-color: #ff0000;"
+        >
+          <h1>542</h1>
+          <fieldset onChange={onChange}>
+            <legend>Select a</legend>
+            <input type="radio" id="e0" name="drone" value="e0" defaultChecked />
+            <label htmlFor="e0">Example 1</label>
+            <input type="radio" id="e1" name="drone" value="e1" />
+            <label htmlFor="e1">Example 2</label>
+            <input type="radio" id="e1" name="drone" value="random" />
+            <label htmlFor="e2">Random</label>
+          </fieldset>
+          <button onClick={start}>Start</button>
+          <div>
+            {
+              [data1, data2].map((data, i) => (
+                <div className="table" key={i}>
+                  {
+                    data.map((row, j) => <div className="row" key={j}>
+                      {row.map((cell, k) => (
+                        <div
+                          key={k}
+                          className="cell"
+                          style={{backgroundColor: `#${getColor(cell)}`}}
+                        >
+                          {cell}
+                        </div>
+                      ))}
+                    </div>)
+                  }
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+      );
+    }
+    ReactDOM.createRoot(document.querySelector('#root')).render(<App />)
+  </script>
+</body>
+
+</html>
